@@ -1,9 +1,11 @@
+```javascript
 /**
- * Created by asim on 4/8/17.
+ * Fixed TileGround.js (Crash Safe Version)
  */
 function TileGround(ctx) {
 
     var _this;
+
     this._init = function() {
 
         _this = this;
@@ -23,18 +25,17 @@ function TileGround(ctx) {
         this._createMapPart([9, 10, 11, 12, 13, 14], 1, 5, [0, 2], 1);
         this._createMapPart([9, 10, 11, 12, 13, 14], Math.round(this.totalNoOfTiles / 2), 0, [], 0);
 
-        // this._createMapPart([15], Math.round(this.totalNoOfTiles / 6 - this.totalNoOfTiles / 8), 3, [0, 1], 2);
-
         this._createMapPart([15], Math.round(this.totalNoOfTiles / 4), 1, [0, 1], 2);
         this._createMapPart([15], Math.round(this.totalNoOfTiles / 4), 2, [1, 2], 0);
         this._createMapPart([15], Math.round(this.totalNoOfTiles / 2), 1, [0, 1], 2);
 
         this._createMapPart([16, 17, 18, 19], this.totalNoOfTiles, 2, [1, 2], 0);
 
-        // console.log(_this.mapArray);
+        // SAFE obstacle creation
         this._createObstacle({x: 600, y: 435}, 205, 125);
         this._createObstacle({x: 2600, y: 435}, 205, 125);
 
+        // images
         this.grass = new Image();
         this.sand = new Image();
         this.verticalSand = new Image();
@@ -56,38 +57,51 @@ function TileGround(ctx) {
 
         var randomFI = defaultFrame;
 
-        for(var i = 0; i < rows.length; i++){
+        for (var i = 0; i < rows.length; i++) {
 
-            if(!_this.mapArray.hasOwnProperty(rows[i]))
-                _this.mapArray.push([]);
-            for(var j = 0; j < noOfColumns; j++){
+            // ensure row exists
+            if (!_this.mapArray[rows[i]]) {
+                _this.mapArray[rows[i]] = [];
+            }
+
+            for (var j = 0; j < noOfColumns; j++) {
 
                 randomFI = defaultFrame;
-                for(var k in randomFrames){
-                    if(_this._getRandomInt(0, 30) == 3){
 
+                for (var k in randomFrames) {
+                    if (_this._getRandomInt(0, 30) === 3) {
                         randomFI = randomFrames[k];
                         break;
                     }
                 }
-                _this.mapArray[rows[i]].push({fi: randomFI, tileType: tileType});
+
+                _this.mapArray[rows[i]].push({
+                    fi: randomFI,
+                    tileType: tileType
+                });
             }
         }
     };
 
+    // 🔥 FIXED FUNCTION
     this._createObstacle = function (obstaclePosition, obstacleWidth, obstacleHeight) {
 
-        var fromY =  Math.round(obstaclePosition.y / TILE_SIZE) - 2;
+        var fromY = Math.round(obstaclePosition.y / TILE_SIZE) - 2;
         var fromX = Math.round(obstaclePosition.x / TILE_SIZE) - 2;
         var toY = Math.round((obstaclePosition.y + obstacleHeight) / TILE_SIZE) - 3;
         var toX = Math.round((obstaclePosition.x + obstacleWidth) / TILE_SIZE) - 2;
 
-        for(i = fromY; i < toY; i++){
+        for (var i = fromY; i < toY; i++) {
 
-            for(j = fromX; j < toX; j++){
+            // row check
+            if (!_this.mapArray[i]) continue;
+
+            for (var j = fromX; j < toX; j++) {
+
+                // column check
+                if (!_this.mapArray[i][j]) continue;
 
                 _this.mapArray[i][j].tileType = 4;
-                // console.log('y = ' + i + ', x = ' + j);
             }
         }
     };
@@ -96,52 +110,51 @@ function TileGround(ctx) {
 
         this.ctx.drawImage(this.background, 0, 0, 280, 220, 200, 230, 280, 260);
         this.ctx.drawImage(this.tree, 0, 0, 550, 625, 2300, 100, 350, 398);
-        this.ctx.drawImage(this.bigStone, 0, 0, 205, 125, 600, 400, 205, 125);  //image, sx, sy, sw, sh, dx, dy, dw, dh
-        this.ctx.drawImage(this.bigStone, 0, 0, 205, 125, 2600, 400, 205, 125);  //image, sx, sy, sw, sh, dx, dy, dw, dh
+        this.ctx.drawImage(this.bigStone, 0, 0, 205, 125, 600, 400, 205, 125);
+        this.ctx.drawImage(this.bigStone, 0, 0, 205, 125, 2600, 400, 205, 125);
+
         for (var i = 0; i < _this.mapArray.length; i++) {
+
+            if (!_this.mapArray[i]) continue;
 
             for (var j = 0; j < _this.mapArray[i].length; j++) {
 
-                if (_this.mapArray[i][j].tileType == 1) {
+                var tile = _this.mapArray[i][j];
+                if (!tile) continue;
 
-                    _this._drawGrass(_this.mapArray[i][j].fi * 100, {x: j * TILE_SIZE, y: i * TILE_SIZE}, {w: 100, h: 100}, {w: TILE_SIZE, h: TILE_SIZE});
-                } else if (_this.mapArray[i][j].tileType == 2) {
-
-                    _this._drawSand(_this.mapArray[i][j].fi * 100, {x: j * TILE_SIZE, y: i * TILE_SIZE}, {w: 100, h: 100}, {w: TILE_SIZE, h: TILE_SIZE});
-                } else if (_this.mapArray[i][j].tileType == 3){
-
-                    _this._drawVerticalSand(_this.mapArray[i][j].fi * 44, {x: j * TILE_SIZE, y: i * TILE_SIZE}, {w: 44, h: 44}, {w: TILE_SIZE, h: TILE_SIZE});
-                } else if (_this.mapArray[i][j].tileType == 5){
-
-                    _this._drawVerticalSandRight(_this.mapArray[i][j].fi * 44, {x: j * TILE_SIZE, y: i * TILE_SIZE}, {w: 44, h: 44}, {w: TILE_SIZE, h: TILE_SIZE});
+                if (tile.tileType == 1) {
+                    _this._drawGrass(tile.fi * 100, {x: j * TILE_SIZE, y: i * TILE_SIZE}, {w: 100, h: 100}, {w: TILE_SIZE, h: TILE_SIZE});
+                } else if (tile.tileType == 2) {
+                    _this._drawSand(tile.fi * 100, {x: j * TILE_SIZE, y: i * TILE_SIZE}, {w: 100, h: 100}, {w: TILE_SIZE, h: TILE_SIZE});
+                } else if (tile.tileType == 3) {
+                    _this._drawVerticalSand(tile.fi * 44, {x: j * TILE_SIZE, y: i * TILE_SIZE}, {w: 44, h: 44}, {w: TILE_SIZE, h: TILE_SIZE});
+                } else if (tile.tileType == 5) {
+                    _this._drawVerticalSandRight(tile.fi * 44, {x: j * TILE_SIZE, y: i * TILE_SIZE}, {w: 44, h: 44}, {w: TILE_SIZE, h: TILE_SIZE});
                 }
             }
         }
     };
-    this._drawVerticalSand = function (fi, position, sizeFrom, sizeTo) {
 
+    this._drawVerticalSand = function (fi, position, sizeFrom, sizeTo) {
         _this.ctx.drawImage(_this.verticalSand, fi, 0, sizeFrom.w, sizeFrom.h, position.x, position.y, sizeTo.w, sizeTo.h);
     };
 
     this._drawVerticalSandRight = function (fi, position, sizeFrom, sizeTo) {
-
         _this.ctx.drawImage(_this.verticalSandRight, fi, 0, sizeFrom.w, sizeFrom.h, position.x, position.y, sizeTo.w, sizeTo.h);
     };
 
     this._drawSand = function (fi, position, sizeFrom, sizeTo) {
-
         _this.ctx.drawImage(_this.sand, fi, 0, sizeFrom.w, sizeFrom.h, position.x, position.y, sizeTo.w, sizeTo.h);
     };
 
     this._drawGrass = function (fi, position, sizeFrom, sizeTo) {
-
         _this.ctx.drawImage(_this.grass, fi, 0, sizeFrom.w, sizeFrom.h, position.x, position.y, sizeTo.w, sizeTo.h);
     };
 
     this._getRandomInt = function(min, max) {
-
         return Math.floor(Math.random() * (max - min + 1)) + min;
     };
 
     this._init();
 }
+```
